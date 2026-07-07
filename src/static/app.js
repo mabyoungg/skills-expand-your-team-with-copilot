@@ -24,6 +24,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("login-form");
   const closeLoginModal = document.querySelector(".close-login-modal");
   const loginMessage = document.getElementById("login-message");
+  const themeToggle = document.getElementById("theme-toggle");
+  const themeToggleIcon = document.getElementById("theme-toggle-icon");
+  const themeToggleLabel = document.getElementById("theme-toggle-label");
 
   // Activity categories with corresponding colors
   const activityTypes = {
@@ -50,6 +53,28 @@ document.addEventListener("DOMContentLoaded", () => {
     afternoon: { start: "15:00", end: "18:00" }, // After school hours
     weekend: { days: ["Saturday", "Sunday"] }, // Weekend days
   };
+
+  function setTheme(theme) {
+    const isDarkMode = theme === "dark";
+
+    document.body.classList.toggle("dark-mode", isDarkMode);
+    localStorage.setItem("theme", theme);
+
+    if (themeToggle && themeToggleIcon && themeToggleLabel) {
+      themeToggle.setAttribute("aria-pressed", isDarkMode.toString());
+      themeToggle.setAttribute(
+        "aria-label",
+        isDarkMode ? "Switch to light mode" : "Switch to dark mode"
+      );
+      themeToggleIcon.textContent = isDarkMode ? "☀️" : "🌙";
+      themeToggleLabel.textContent = isDarkMode ? "Light mode" : "Dark mode";
+    }
+  }
+
+  function initializeTheme() {
+    const savedTheme = localStorage.getItem("theme");
+    setTheme(savedTheme === "dark" ? "dark" : "light");
+  }
 
   // Initialize filters from active elements
   function initializeFilters() {
@@ -602,6 +627,13 @@ document.addEventListener("DOMContentLoaded", () => {
     displayFilteredActivities();
   });
 
+  if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+      const isDarkMode = document.body.classList.contains("dark-mode");
+      setTheme(isDarkMode ? "light" : "dark");
+    });
+  }
+
   // Add event listeners to category filter buttons
   categoryFilters.forEach((button) => {
     button.addEventListener("click", () => {
@@ -862,6 +894,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Initialize app
+  initializeTheme();
   checkAuthentication();
   initializeFilters();
   fetchActivities();
