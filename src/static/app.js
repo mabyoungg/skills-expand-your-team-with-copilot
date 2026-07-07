@@ -497,6 +497,28 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function createShareData(name, details) {
+    const formattedSchedule = formatSchedule(details);
+    const shareUrl = `${window.location.origin}${window.location.pathname}?activity=${encodeURIComponent(
+      name
+    )}`;
+    const shareText = `Check out ${name} at Mergington High School! ${details.description} Schedule: ${formattedSchedule}`;
+
+    return {
+      url: shareUrl,
+      text: shareText,
+      facebookUrl: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+        shareUrl
+      )}`,
+      xUrl: `https://x.com/intent/tweet?text=${encodeURIComponent(
+        shareText
+      )}&url=${encodeURIComponent(shareUrl)}`,
+      whatsappUrl: `https://wa.me/?text=${encodeURIComponent(
+        `${shareText} ${shareUrl}`
+      )}`,
+    };
+  }
+
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
@@ -523,6 +545,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
+    const shareData = createShareData(name, details);
 
     // Create activity tag
     const tagHtml = `
@@ -594,6 +617,14 @@ document.addEventListener("DOMContentLoaded", () => {
         `
         }
       </div>
+      <div class="share-actions">
+        <span class="share-actions-label">Share:</span>
+        <button class="share-button native-share-button hidden">Share</button>
+        <a class="share-button share-link" href="${shareData.facebookUrl}" target="_blank" rel="noopener noreferrer">Facebook</a>
+        <a class="share-button share-link" href="${shareData.xUrl}" target="_blank" rel="noopener noreferrer">X</a>
+        <a class="share-button share-link" href="${shareData.whatsappUrl}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+        <button class="share-button copy-share-link" data-share-url="${shareData.url}">Copy Link</button>
+      </div>
     `;
 
     // Add click handlers for delete buttons
@@ -611,6 +642,34 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    const nativeShareButton = activityCard.querySelector(".native-share-button");
+    if (navigator.share) {
+      nativeShareButton.classList.remove("hidden");
+      nativeShareButton.addEventListener("click", async () => {
+        try {
+          await navigator.share({
+            title: `${name} - Mergington High School`,
+            text: shareData.text,
+            url: shareData.url,
+          });
+        } catch (error) {
+          if (error.name !== "AbortError") {
+            showMessage("Unable to open the share menu right now.", "error");
+          }
+        }
+      });
+    }
+
+    const copyShareLinkButton = activityCard.querySelector(".copy-share-link");
+    copyShareLinkButton.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        showMessage("Share link copied!", "success");
+      } catch (error) {
+        showMessage("Could not copy link. Please copy it manually.", "error");
+      }
+    });
 
     activitiesList.appendChild(activityCard);
   }
